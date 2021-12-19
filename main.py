@@ -1,5 +1,9 @@
 '''Train CIFAR10 with PyTorch.'''
 
+from utils import progress_bar
+from models import *
+import argparse
+import os
 from time import time
 import json
 import torch
@@ -12,14 +16,13 @@ from torch.utils.data import random_split
 import torchvision
 import torchvision.transforms as transforms
 
-import torch_xla
-import torch_xla.core.xla_model as xm
-
-import os
-import argparse
-
-from models import *
-from utils import progress_bar
+has_xla_module = False
+try:
+    import torch_xla
+    import torch_xla.core.xla_model as xm
+    has_xla_module = True
+except ImportError:
+    pass
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -35,7 +38,8 @@ parser.add_argument('--use-tpu', '-t', action='store_true',
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-using_tpu = 'COLAB_TPU_ADDR' in os.os.environ and args.use_tpu
+using_tpu = (
+    'COLAB_TPU_ADDR' in os.environ) and has_xla_module and args.use_tpu
 device = xm.xla_device() if using_tpu else device
 print('Device: {}'.format(device))
 
