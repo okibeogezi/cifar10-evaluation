@@ -1,5 +1,6 @@
 '''Train CIFAR10 with PyTorch.'''
 
+from numpy.core.fromnumeric import mean
 from utils import progress_bar
 from models import *
 import argparse
@@ -130,6 +131,8 @@ def train(epoch):
     training_correct, val_correct = 0, 0
     training_total, val_total = 0, 0
 
+    mean_training_loss, mean_val_loss = None, None
+
     model.train()
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(device), targets.to(device)
@@ -144,8 +147,9 @@ def train(epoch):
         training_total += targets.size(0)
         training_correct += predicted.eq(targets).sum().item()
 
+        mean_training_loss = training_loss/(batch_idx+1)
         progress_bar(batch_idx, len(train_loader), 'Training Loss: %.3f | Training Acc: %.3f%% (%d/%d)'
-                     % (training_loss/(batch_idx+1), 100.*training_correct/training_total, training_correct, training_total))
+                     % (mean_training_loss, 100.*training_correct/training_total, training_correct, training_total))
 
     model.eval()
     for batch_idx, (inputs, targets) in enumerate(val_loader):
@@ -158,16 +162,17 @@ def train(epoch):
         val_total += targets.size(0)
         val_correct += predicted.eq(targets).sum().item()
 
+        mean_val_loss = val_loss/(batch_idx+1)
         progress_bar(batch_idx, len(val_loader), 'Val Loss: %.3f | Val Acc: %.3f%% (%d/%d)'
-                     % (val_loss/(batch_idx+1), 100.*val_correct/val_total, val_correct, val_total))
+                     % (mean_val_loss, 100.*val_correct/val_total, val_correct, val_total))
 
     training_acc = 100. * (training_correct / training_total)
     val_acc = 100. * (val_correct / val_total)
 
     training_info = {
-        'training_loss': training_loss,
+        'training_loss': mean_training_loss,
         'training_accuracy': training_acc,
-        'val_loss': val_loss,
+        'val_loss': mean_val_loss,
         'val_accuracy': val_acc,
     }
 
