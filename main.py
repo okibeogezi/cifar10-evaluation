@@ -115,7 +115,7 @@ if args.resume:
     checkpoint = torch.load(checkpoint_path)
     model.load_state_dict(checkpoint['model'])
     best_acc = checkpoint['accuracy']
-    start_epoch = checkpoint['epoch']
+    start_epoch = checkpoint['epoch'] + 1
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=args.lr,
