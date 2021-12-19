@@ -125,7 +125,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 # Training
 def train(epoch):
-    print('\nEpoch: %d' % epoch)
+    print('\nEpoch {}'.format(epoch + 1))
 
     training_loss, val_loss = 0, 0
     training_correct, val_correct = 0, 0
@@ -176,7 +176,8 @@ def train(epoch):
         'val_accuracy': val_acc,
     }
 
-    file_path = './logs/{}-{}-{}.json'.format(model_name, int(time()), epoch)
+    file_path = './logs/{}-{}-{}.json'.format(
+        model_name, int(time()), epoch + 1)
 
     return training_info, file_path
 
