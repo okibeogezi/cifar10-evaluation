@@ -1,0 +1,4 @@
+*.pyc
+.vscode/*
+checkpoints/*
+logs/*
