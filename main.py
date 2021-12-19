@@ -97,7 +97,8 @@ if args.resume:
     print('==> Resuming from checkpoint..')
     assert os.path.isdir(
         'checkpoints'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoints/ckpt.pth')
+    checkpoint_path = './checkpoints/ckpt-{}.pth'.format(model_name)
+    checkpoint = torch.load(checkpoint_path)
     net.load_state_dict(checkpoint['model'])
     best_acc = checkpoint['accuracy']
     start_epoch = checkpoint['epoch']
