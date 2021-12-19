@@ -23,6 +23,8 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
+parser.add_argument('--epochs', '-e', default=5, type=int,
+                    help='number of training epochs')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -199,7 +201,7 @@ def test():
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
 
-for epoch in range(start_epoch, start_epoch+5):
+for epoch in range(start_epoch, args.epochs):
     training_info, file_path = train(epoch)
 
     if not os.path.isdir('logs'):
