@@ -12,6 +12,9 @@ from torch.utils.data import random_split
 import torchvision
 import torchvision.transforms as transforms
 
+import torch_xla
+import torch_xla.core.xla_model as xm
+
 import os
 import argparse
 
@@ -27,9 +30,15 @@ parser.add_argument('--epochs', '-e', default=5, type=int,
                     help='number of training epochs')
 parser.add_argument('--model', '-m', choices=['shufflenet_v2', 'mobilenet_v2'], required=True, type=str,
                     help='model to train')
+parser.add_argument('--use-tpu', '-t', action='store_true',
+                    help='use a TPU device')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+using_tpu = 'COLAB_TPU_ADDR' in os.os.environ and args.use_tpu
+device = xm.xla_device() if using_tpu else device
+print('Device: {}'.format(device))
+
 best_acc = 0  # best val accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
