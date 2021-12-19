@@ -25,6 +25,8 @@ parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 parser.add_argument('--epochs', '-e', default=5, type=int,
                     help='number of training epochs')
+parser.add_argument('--model', '-m', choices=['shufflenet_v2', 'mobilenet_v2'], type=str,
+                    help='model to train')
 args = parser.parse_args()
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -76,34 +78,14 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
 
 # Model
-print('==> Building model..')
-# net = VGG('VGG19')
-# net = ResNet18()
-# net = PreActResNet18()
-# net = GoogLeNet()
-# net = DenseNet121()
-# net = ResNeXt29_2x64d()
-# net = MobileNet()
-# net = MobileNetV2()
-# net = DPN92()
-# net = ShuffleNetG2()
-# net = SENet18()
-# net = EfficientNetB0()
-# net = RegNetX_200MF()
-# net = SimpleDLA()
+model_dict = {
+    'shufflenet_v2': ShuffleNetV2(1),
+    'mobilenet_v2': MobileNetV2(),
+}
 
-net = ShuffleNetV2(1)
-# net = MobileNetV2()
-
-# <class 'models.mobilenet.MobileNet'>: 3,217,226.00
-# <class 'models.mobilenetv2.MobileNetV2'>: 2,296,922.00
-# <class 'models.efficientnet.EfficientNet'>: 3,599,686.00
-# <class 'models.shufflenetv2.ShuffleNetV2'>: 1,263,854.00
-# <class 'models.dla_simple.SimpleDLA'>: 15,142,970.00
-# for net in [MobileNet(), MobileNetV2(), EfficientNetB0(), ShuffleNetV2(1), SimpleDLA()]:
-#     print('{}: {:,.2f}'.format(net.__class__, sum(dict((p.data_ptr(), p.numel())
-#                                                        for p in net.parameters()).values())))
-# exit(1)
+net = model_dict[args.model]
+model_name = net.__class__.__name__
+print('==> Building {} model..'.format(model_name))
 
 net = net.to(device)
 if device == 'cuda':
@@ -174,8 +156,7 @@ def train(epoch):
         'val_accuracy': val_acc,
     }
 
-    file_path = './logs/{}-{}-{}.json'.format(
-        net.__class__.__name__, int(time()), epoch)
+    file_path = './logs/{}-{}-{}.json'.format(model_name, int(time()), epoch)
 
     return training_info, file_path
 
@@ -220,8 +201,7 @@ for epoch in range(start_epoch, args.epochs):
         }
         if not os.path.isdir('checkpoints'):
             os.mkdir('checkpoints')
-        checkpoint_path = './checkpoints/ckpt-{}.pth'.format(
-            net.__class__.__name__)
+        checkpoint_path = './checkpoints/ckpt-{}.pth'.format(model_name)
         torch.save(state, checkpoint_path)
         best_acc = val_accuracy
 
