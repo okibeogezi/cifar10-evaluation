@@ -34,7 +34,7 @@ best_acc = 0  # best val accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 # Data
-print('==> Preparing data..')
+print('Preparing data...')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
@@ -83,28 +83,28 @@ model_dict = {
     'mobilenet_v2': MobileNetV2(),
 }
 
-net = model_dict[args.model]
-model_name = net.__class__.__name__
-print('==> Building {} model..'.format(model_name))
+model = model_dict[args.model]
+model_name = model.__class__.__name__
+print('Building {} model...'.format(model_name))
 
-net = net.to(device)
+model = model.to(device)
 if device == 'cuda':
-    net = torch.nn.DataParallel(net)
+    model = nn.DataParallel(model)
     cudnn.benchmark = True
 
 if args.resume:
     # Load checkpoint.
-    print('==> Resuming from checkpoint..')
+    print('Resuming from checkpoint...')
     assert os.path.isdir(
         'checkpoints'), 'Error: no checkpoint directory found!'
     checkpoint_path = './checkpoints/ckpt-{}.pth'.format(model_name)
     checkpoint = torch.load(checkpoint_path)
-    net.load_state_dict(checkpoint['model'])
+    model.load_state_dict(checkpoint['model'])
     best_acc = checkpoint['accuracy']
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr,
+optimizer = optim.SGD(model.parameters(), lr=args.lr,
                       momentum=0.9, weight_decay=5e-4)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
@@ -117,11 +117,11 @@ def train(epoch):
     training_correct, val_correct = 0, 0
     training_total, val_total = 0, 0
 
-    net.train()
+    model.train()
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(device), targets.to(device)
         optimizer.zero_grad()
-        outputs = net(inputs)
+        outputs = model(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
@@ -134,10 +134,10 @@ def train(epoch):
         progress_bar(batch_idx, len(train_loader), 'Training Loss: %.3f | Training Acc: %.3f%% (%d/%d)'
                      % (training_loss/(batch_idx+1), 100.*training_correct/training_total, training_correct, training_total))
 
-    net.eval()
+    model.eval()
     for batch_idx, (inputs, targets) in enumerate(val_loader):
         inputs, targets = inputs.to(device), targets.to(device)
-        outputs = net(inputs)
+        outputs = model(inputs)
         loss = criterion(outputs, targets)
 
         val_loss += loss.item()
@@ -168,11 +168,11 @@ def test():
     correct = 0
     total = 0
 
-    net.eval()
+    model.eval()
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(test_loader):
             inputs, targets = inputs.to(device), targets.to(device)
-            outputs = net(inputs)
+            outputs = model(inputs)
             loss = criterion(outputs, targets)
 
             test_loss += loss.item()
@@ -197,7 +197,7 @@ for epoch in range(start_epoch, args.epochs):
     if val_accuracy > best_acc:
         print('Saving new best model...')
         state = {
-            'model': net.state_dict(),
+            'model': model.state_dict(),
             'accuracy': val_accuracy,
             'epoch': epoch,
         }
@@ -206,6 +206,10 @@ for epoch in range(start_epoch, args.epochs):
         checkpoint_path = './checkpoints/ckpt-{}.pth'.format(model_name)
         torch.save(state, checkpoint_path)
         best_acc = val_accuracy
+    elif best_acc > 0:
+        persisted_state = torch.load(checkpoint_path)
+        persisted_state['epoch'] = epoch
+        torch.save(persisted_state, checkpoint_path)
 
     scheduler.step()
 
