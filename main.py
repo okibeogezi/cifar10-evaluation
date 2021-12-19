@@ -25,7 +25,7 @@ parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 parser.add_argument('--epochs', '-e', default=5, type=int,
                     help='number of training epochs')
-parser.add_argument('--model', '-m', choices=['shufflenet_v2', 'mobilenet_v2'], type=str,
+parser.add_argument('--model', '-m', choices=['shufflenet_v2', 'mobilenet_v2'], required=True, type=str,
                     help='model to train')
 args = parser.parse_args()
 
