@@ -1,7 +1,7 @@
 '''Train CIFAR10 with PyTorch.'''
 
 from numpy.core.fromnumeric import mean
-from utils import progress_bar
+from utils import progress_bar, get_mean_and_std
 from models import *
 import argparse
 import os
@@ -10,7 +10,6 @@ import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 from torch.utils.data import random_split
 
@@ -47,21 +46,28 @@ print('Device: {}'.format(device))
 best_acc = 0  # best val accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
+IMG_MEAN = (0.4914, 0.4822, 0.4465)
+IMG_STD = (0.2023, 0.1994, 0.2010)
+
 # Data
 print('Preparing data...')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize(IMG_MEAN, IMG_STD),
 ])
 
 transform_val_or_test = transforms.Compose([
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize(IMG_MEAN, IMG_STD),
 ])
 
 root = '~/Downloads/'
+
+# print(get_mean_and_std(dataset=random_split(
+#     torchvision.datasets.CIFAR10(
+#         root=root, train=True, download=True, transform=transforms.Compose([transforms.ToTensor()])), [45000, 5000], generator=torch.Generator().manual_seed(42))[0]))
 
 
 def split_train():
@@ -199,7 +205,7 @@ def test():
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-            progress_bar(batch_idx, len(test_loader), 'Training Loss: %.3f | Training Acc: %.3f%% (%d/%d)'
+            progress_bar(batch_idx, len(test_loader), 'Test Loss: %.3f | Test Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
 
@@ -231,5 +237,3 @@ for epoch in range(start_epoch, args.epochs):
         torch.save(persisted_state, checkpoint_path)
 
     scheduler.step()
-
-test()
