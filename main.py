@@ -65,10 +65,6 @@ transform_val_or_test = transforms.Compose([
 
 root = '~/Downloads/'
 
-# print(get_mean_and_std(dataset=random_split(
-#     torchvision.datasets.CIFAR10(
-#         root=root, train=True, download=True, transform=transforms.Compose([transforms.ToTensor()])), [45000, 5000], generator=torch.Generator().manual_seed(42))[0]))
-
 
 def split_train():
     train_set = torchvision.datasets.CIFAR10(
